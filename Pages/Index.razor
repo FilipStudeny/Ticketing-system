@@ -1,0 +1,129 @@
+﻿@page "/"
+@using System.Xml.Linq
+@using TicketingSystem.Models
+@using System.IO
+@using System.Globalization
+@inject NavigationManager NavigationManager
+
+
+<h2>Ticket List</h2>
+<div class="btn-group flex-row justify-content-evenly">
+    <button @onclick="(() => SortTickets(TicketField.TicketID))" class="btn btn-primary filter-button">Ticket ID</button>
+    <button @onclick="(() => SortTickets(TicketField.Title))" class="btn btn-primary filter-button">Title</button>
+    <button @onclick="(() => SortTickets(TicketField.Severity))" class="btn btn-primary filter-button">Severity</button>
+    <button @onclick="(() => SortTickets(TicketField.DueDate))" class="btn btn-primary filter-button">Due Date</button>
+</div>
+
+<table class="table table-striped">
+    <thead class="thead-dark">
+    <tr class="text-center">
+        <th scope="col" class="col-1">Ticket ID</th>
+        <th scope="col">Title</th>
+        <th scope="col" class="col-2">Severity</th>
+        <th scope="col" class="col-1">Due Date</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var ticket in tickets)
+    {
+        <tr style="vertical-align: middle;">
+            <th scope="row">@ticket.TicketId</th>
+            <td>@ticket.Title</td>
+            <td class="@GetSeverityCssClass(ticket.Severity) text-uppercase text-white text-center" style="font-weight: 700">@ticket.Severity</td>
+            <td class="text-center">@ticket.DueDate.ToShortDateString()</td>
+            <td>
+                <button class="btn btn-primary mb-0 mx-0" @onclick="(() => ViewTicketDetails(ticket.TicketId))">View Details</button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+
+@code {
+    private List<Ticket> tickets = new List<Ticket>();
+    private TicketField sortedColumn; // Default sorting column
+    private bool sortDescending = false; // Default sorting order (ascending)
+    public enum TicketField
+    {
+        TicketID,
+        Title,
+        Severity,
+        DueDate
+    }
+    
+    protected override void OnInitialized()
+    {
+        LoadTicketsFromXml();
+    }
+
+    private void SortTickets(TicketField column)
+    {
+        if (column == sortedColumn){
+            sortDescending = !sortDescending;
+        }else{
+            sortedColumn = column;
+            sortDescending = false; 
+        }
+        tickets = SortTicketsList(tickets, sortedColumn, sortDescending);
+    }
+
+    private List<Ticket> SortTicketsList(List<Ticket> ticketList, TicketField column, bool descending)
+    {
+        switch (column)
+        {
+            case TicketField.Title:
+                return descending ? ticketList.OrderByDescending(t => t.Title).ToList() : ticketList.OrderBy(t => t.Title).ToList();
+            case TicketField.Severity:
+                return descending ? ticketList.OrderByDescending(t => t.Severity).ToList() : ticketList.OrderBy(t => t.Severity).ToList();
+            case TicketField.DueDate:
+                return descending ? ticketList.OrderByDescending(t => t.DueDate).ToList() : ticketList.OrderBy(t => t.DueDate).ToList();
+            default:
+                return descending ? ticketList.OrderByDescending(t => t.TicketId).ToList() : ticketList.OrderBy(t => t.TicketId).ToList();
+        }
+    }
+
+    private string GetSeverityCssClass(string severity)
+    {
+        switch (severity.ToLower())
+        {
+            case "low":
+                return "bg-success"; // Green
+            case "medium":
+                return "bg-warning"; // Orange
+            case "high":
+                return "bg-danger"; // Red
+            default:
+                return "";
+        }
+    }
+
+    private void LoadTicketsFromXml()
+    {
+        string xmlFilePath = "tickets.xml";
+
+        if (File.Exists(xmlFilePath))
+        {
+            XDocument xmlDoc = XDocument.Load(xmlFilePath);
+            tickets = xmlDoc.Root.Elements("Ticket")
+                .Select(x => new Ticket
+                {
+                    TicketId = x.Element("ID").Value,
+                    Title = x.Element("Title").Value,
+                    Severity = x.Element("Severity").Value,
+                    DueDate = DateTime.ParseExact(
+                        x.Element("DueDate").Value,
+                        "yyyy-dd-MM",
+                        CultureInfo.InvariantCulture
+                    )
+                })
+                .ToList();
+        }
+    }
+
+    private void ViewTicketDetails(string ticketId)
+    {
+        NavigationManager.NavigateTo($"/ticket/{ticketId}/details");
+    }
+}

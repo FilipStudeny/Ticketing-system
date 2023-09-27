@@ -1,0 +1,147 @@
+﻿@page "/create"
+@using TicketingSystem.Models
+@using System.Xml.Linq
+@using System.Text
+@inject NavigationManager NavigationManager
+
+<h2>Create new ticket</h2>
+
+<EditForm Model="@ticket" OnValidSubmit="SaveTicket">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <div class="row">
+            <div class="form-group col-md-10">
+                <label for="title">Title:</label>
+                <InputText id="title" class="form-control" @bind-Value="ticket.Title" />
+                <ValidationMessage For="@(() => ticket.Title)" class="text-danger" />
+            </div>
+            <div class="form-group col-md-2">
+                <label for="dueDate">Due Date:</label>
+                <InputDate id="dueDate" class="form-control" @bind-Value="ticket.DueDate" min="@DateTime.Now.Date.ToShortDateString()" />
+                <ValidationMessage For="@(() => ticket.DueDate)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="ticket.Description" />
+            <ValidationMessage For="@(() => ticket.Description)" class="text-danger" />
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="clientEmail">Client Email:</label>
+                <InputText type="email" id="clientEmail" class="form-control" @bind-Value="ticket.ClientEmail" />
+                <ValidationMessage For="@(() => ticket.ClientEmail)" class="text-danger" />
+            </div>
+            
+            <div class="form-group col-md-6">
+                <label for="clientPhoneNumber">Client Phone Number:</label>
+                <InputText type="number" id="clientPhoneNumber" class="form-control" @bind-Value="ticket.ClientPhoneNumber" />
+                <ValidationMessage For="@(() => ticket.ClientPhoneNumber)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="severity">Severity:</label>
+                <InputSelect id="severity" class="form-control" @bind-Value="ticket.Severity">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => ticket.Severity)" class="text-danger" />
+            </div>
+            <div class="form-group col-md-6">
+                <label for="ticketAdministrator">Ticket Administrator:</label>
+                <InputText id="ticketAdministrator" class="form-control" @bind-Value="ticket.TicketAdministrator" />
+                <ValidationMessage For="@(() => ticket.TicketAdministrator)" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary">Save Ticket</button>
+    </div>
+    
+        @if (showWarning)
+        {
+            <div class="mb-3">
+                <div class="alert alert-warning mb-3" role="alert">
+                     Please fill in all the required fields.
+                </div>
+            </div>
+            
+        }
+</EditForm>
+
+
+@code {
+    private Ticket ticket = new Ticket();
+    private bool showWarning = false;
+    private static readonly Random random = new Random();
+    
+    private void SaveTicket()
+    {
+        if (string.IsNullOrEmpty(ticket.Title) || string.IsNullOrEmpty(ticket.Description) ||
+            string.IsNullOrEmpty(ticket.ClientEmail) || string.IsNullOrEmpty(ticket.ClientPhoneNumber) ||
+            string.IsNullOrEmpty(ticket.Severity) || string.IsNullOrEmpty(ticket.TicketAdministrator))
+        {
+            showWarning = true;
+            return;
+        }
+
+        string randomId = GenerateRandomId(10);
+        ticket.TicketId = randomId;
+        
+        XElement ticketsXml = new XElement("Tickets");
+        XElement ticketXml = new XElement("Ticket",
+            new XElement("ID", ticket.TicketId),
+            new XElement("Title", ticket.Title),
+            new XElement("Description", ticket.Description),
+            new XElement("Severity", ticket.Severity),
+            new XElement("ClientEmail", ticket.ClientEmail),
+            new XElement("ClientPhoneNumber", ticket.ClientPhoneNumber),
+            new XElement("TicketAdministrator", ticket.TicketAdministrator),
+            new XElement("DueDate", ticket.DueDate.ToString("yyyy-dd-MM")),
+            new XElement("TimeOfCreation", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+            );
+
+        ticketsXml.Add(ticketXml);
+        XDocument xmlDoc;
+        string xmlFilePath = "tickets.xml"; 
+
+        if (File.Exists(xmlFilePath)){
+            xmlDoc = XDocument.Load(xmlFilePath);
+        } else{
+            xmlDoc = new XDocument(new XDeclaration("1.0", "utf-8", null));
+            xmlDoc.Add(new XElement("Tickets"));
+        }
+
+        xmlDoc.Root.Add(ticketXml);
+        xmlDoc.Save(xmlFilePath);
+
+        ticket = new Ticket();
+        NavigationManager.NavigateTo("/Home");
+    }
+
+    private string GenerateRandomId(int length)
+    {
+        const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder stringBuilder = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++)
+        {
+            int index = random.Next(characters.Length);
+            stringBuilder.Append(characters[index]);
+        }
+
+        return stringBuilder.ToString();
+    }
+}

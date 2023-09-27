@@ -1,0 +1,109 @@
+﻿@page "/ticket/{TicketId}/details"
+@using TicketingSystem.Models
+@using System.Xml.Linq
+@using System.IO
+@using System.Globalization
+@inject NavigationManager NavigationManager
+
+<h2>Ticket Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h3>@ticket.Title</h3>
+        <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
+        <p><strong>Severity:</strong> <span class="@GetSeverityCssClass(ticket.Severity)">@ticket.Severity</span></p>
+        <p><strong>Due Date:</strong> @ticket.DueDate.ToShortDateString()</p>
+        <p><strong>Description:</strong></p>
+        <p>@ticket.Description</p>
+        <p><strong>Client Email:</strong> @ticket.ClientEmail</p>
+        <p><strong>Client Phone Number:</strong> @ticket.ClientPhoneNumber</p>
+        <p><strong>Ticket Administrator:</strong> @ticket.TicketAdministrator</p>
+    </div>
+</div>
+
+<div class="mb-3 mt-2 d-flex justify-content-end">
+    <button class="btn btn-danger mb-3" @onclick="DeleteTicket">Delete</button>
+</div>
+
+@code {
+    [Parameter]
+    public string TicketId { get; set; }
+
+    private Ticket ticket;
+
+    protected override void OnInitialized()
+    {
+        LoadTicketDetails();
+    }
+
+    private void LoadTicketDetails()
+    {
+        string xmlFilePath = "tickets.xml";
+
+        if (File.Exists(xmlFilePath))
+        {
+            XDocument xmlDoc = XDocument.Load(xmlFilePath);
+            XElement ticketElement = xmlDoc.Root.Elements("Ticket")
+                .FirstOrDefault(x => x.Element("ID").Value == TicketId);
+
+            if (ticketElement != null)
+            {
+                try
+                {
+                    ticket = new Ticket
+                    {
+                        TicketId = ticketElement.Element("ID").Value,
+                        Title = ticketElement.Element("Title").Value,
+                        Severity = ticketElement.Element("Severity").Value,
+                        DueDate = DateTime.ParseExact(
+                            ticketElement.Element("DueDate").Value,
+                            "yyyy-dd-MM", 
+                            CultureInfo.InvariantCulture
+                            ),
+                        Description = ticketElement.Element("Description").Value,
+                        ClientEmail = ticketElement.Element("ClientEmail").Value,
+                        ClientPhoneNumber = ticketElement.Element("ClientPhoneNumber").Value,
+                        TicketAdministrator = ticketElement.Element("TicketAdministrator").Value
+                    };
+                }
+                catch (Exception ex){
+                    Console.WriteLine($"Error loading ticket details: {ex.Message}");
+                }
+            }
+        }
+    }
+    
+    private void DeleteTicket()
+    {
+        string xmlFilePath = "tickets.xml";
+
+        if (File.Exists(xmlFilePath))
+        {
+            XDocument xmlDoc = XDocument.Load(xmlFilePath);
+            XElement ticketElement = xmlDoc.Root.Elements("Ticket")
+                .FirstOrDefault(x => x.Element("ID").Value == TicketId);
+
+            if (ticketElement != null){
+                ticketElement.Remove();
+                xmlDoc.Save(xmlFilePath); 
+            }
+        }
+
+        NavigationManager.NavigateTo("/");
+    }
+
+    private string GetSeverityCssClass(string severity)
+    {
+        switch (severity.ToLower())
+        {
+            case "low":
+                return "text-success"; // Green
+            case "medium":
+                return "text-warning"; // Orange
+            case "high":
+                return "text-danger"; // Red
+            default:
+                return "";
+        }
+    }
+}
