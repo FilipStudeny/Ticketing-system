@@ -1,0 +1,55 @@
+﻿@page "/register"
+@using System.Net.Http.Json
+@using TicketingSystem.Models
+
+<h3>Register</h3>
+
+<EditForm Model="@technician" OnValidSubmit="RegisterTechnician">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="technician.email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="firstname">First Name</label>
+        <InputText id="firstname" @bind-Value="technician.firstname" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="lastname">Last Name</label>
+        <InputText id="lastname" @bind-Value="technician.lastname" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="department">Department</label>
+        <InputText id="department" @bind-Value="technician.department" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+
+@code {
+    private Technician technician = new Technician();
+
+    private async Task RegisterTechnician()
+    {
+        var httpClient = new HttpClient();
+        
+        // Serialize the technician object to JSON and send it in the request body
+        var response = await httpClient.PostAsJsonAsync("http://localhost:5030/api/technician/register", technician);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Registration was successful
+            var message = await response.Content.ReadAsStringAsync();
+        }
+        else
+        {
+            // Registration failed
+            var errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+}

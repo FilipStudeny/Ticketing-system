@@ -11,6 +11,7 @@ IT support tickets are saved into **tickets.xml** (will be improved)
 - Users can create IT support tickets
 - Tickets can be viewed and filtered
 - Tickets can be deleted upon completion
+- Technician registration (WIP)
 
 ## Planned features:
 - Profiles for Technicians, Administrators
@@ -19,5 +20,8 @@ IT support tickets are saved into **tickets.xml** (will be improved)
 - Sending ticket with solution and files back to the client
 - Tickets stored in database
 
+
 ![Alt ](./Images/tck_1.PNG)
 ![Alt ](./Images/tck_2.PNG)
+![Alt ](./Images/tck_3.PNG)
+
