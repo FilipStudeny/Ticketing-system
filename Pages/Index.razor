@@ -5,7 +5,6 @@
 @using System.Globalization
 @inject NavigationManager NavigationManager
 
-
 <h2>Ticket List</h2>
 <div class="btn-group flex-row justify-content-evenly">
     <button @onclick="(() => SortTickets(TicketField.TicketID))" class="btn btn-primary filter-button">Ticket ID</button>
@@ -40,11 +39,11 @@
     </tbody>
 </table>
 
-
 @code {
     private List<Ticket> tickets = new List<Ticket>();
-    private TicketField sortedColumn; // Default sorting column
+    private TicketField sortedColumn = TicketField.TicketID; // Default sorting column
     private bool sortDescending = false; // Default sorting order (ascending)
+
     public enum TicketField
     {
         TicketID,
@@ -52,7 +51,7 @@
         Severity,
         DueDate
     }
-    
+
     protected override void OnInitialized()
     {
         LoadTicketsFromXml();
@@ -60,11 +59,14 @@
 
     private void SortTickets(TicketField column)
     {
-        if (column == sortedColumn){
+        if (column == sortedColumn)
+        {
             sortDescending = !sortDescending;
-        }else{
+        }
+        else
+        {
             sortedColumn = column;
-            sortDescending = false; 
+            sortDescending = false;
         }
         tickets = SortTicketsList(tickets, sortedColumn, sortDescending);
     }
@@ -114,7 +116,7 @@
                     Severity = x.Element("Severity").Value,
                     DueDate = DateTime.ParseExact(
                         x.Element("DueDate").Value,
-                        "yyyy-dd-MM",
+                        "dd-MM-yyyy", 
                         CultureInfo.InvariantCulture
                     )
                 })

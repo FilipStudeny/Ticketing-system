@@ -97,10 +97,22 @@
             return;
         }
 
-        string randomId = GenerateRandomId(10);
+        string randomId = GenerateRandomId(24); 
         ticket.TicketId = randomId;
         
-        XElement ticketsXml = new XElement("Tickets");
+        string xmlFilePath = "tickets.xml";
+        XDocument xmlDoc;
+
+        if (File.Exists(xmlFilePath))
+        {
+            xmlDoc = XDocument.Load(xmlFilePath);
+        }
+        else
+        {
+            xmlDoc = new XDocument(new XDeclaration("1.0", "utf-8", null));
+            xmlDoc.Add(new XElement("Tickets"));
+        }
+
         XElement ticketXml = new XElement("Ticket",
             new XElement("ID", ticket.TicketId),
             new XElement("Title", ticket.Title),
@@ -109,24 +121,12 @@
             new XElement("ClientEmail", ticket.ClientEmail),
             new XElement("ClientPhoneNumber", ticket.ClientPhoneNumber),
             new XElement("TicketAdministrator", ticket.TicketAdministrator),
-            new XElement("DueDate", ticket.DueDate.ToString("yyyy-dd-MM")),
+            new XElement("DueDate", ticket.DueDate.ToString("dd-MM-yyyy")),
             new XElement("TimeOfCreation", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
             );
-
-        ticketsXml.Add(ticketXml);
-        XDocument xmlDoc;
-        string xmlFilePath = "tickets.xml"; 
-
-        if (File.Exists(xmlFilePath)){
-            xmlDoc = XDocument.Load(xmlFilePath);
-        } else{
-            xmlDoc = new XDocument(new XDeclaration("1.0", "utf-8", null));
-            xmlDoc.Add(new XElement("Tickets"));
-        }
-
         xmlDoc.Root.Add(ticketXml);
-        xmlDoc.Save(xmlFilePath);
 
+        xmlDoc.Save(xmlFilePath);
         ticket = new Ticket();
         NavigationManager.NavigateTo("/");
     }

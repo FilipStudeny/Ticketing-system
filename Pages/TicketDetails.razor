@@ -3,6 +3,7 @@
 @using System.Xml.Linq
 @using System.IO
 @using System.Globalization
+@using System.Collections.Generic
 @inject NavigationManager NavigationManager
 
 <h2>Ticket Details</h2>
@@ -13,27 +14,81 @@
         <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
         <p><strong>Severity:</strong> <span class="@GetSeverityCssClass(ticket.Severity)">@ticket.Severity</span></p>
         <p><strong>Due Date:</strong> @ticket.DueDate.ToShortDateString()</p>
+        <p><strong>Time ticket was created:</strong> @ticket.TimeOfCreation</p>
+
         <p><strong>Description:</strong></p>
         <p>@ticket.Description</p>
         <p><strong>Client Email:</strong> @ticket.ClientEmail</p>
         <p><strong>Client Phone Number:</strong> @ticket.ClientPhoneNumber</p>
         <p><strong>Ticket Administrator:</strong> @ticket.TicketAdministrator</p>
+
+        @if (ticket.TechNotes != null && ticket.TechNotes.Length > 0)
+        {
+            <p><strong>Tech Notes:</strong></p>
+            <ul>
+                @foreach (var note in ticket.TechNotes)
+                {
+                    <li>@note.Trim()</li>
+                }
+            </ul>
+        }
     </div>
 </div>
 
-<div class="mb-3 mt-2 d-flex justify-content-end">
-    <button class="btn btn-danger mb-3" @onclick="DeleteTicket">Delete</button>
+<div class="d-flex justify-content-end">
+    <div class="mb-3 mt-2 d-flex justify-content-evenly">
+        <button class="btn btn-primary mb-3 mx-2" @onclick="ToggleTechNotesInput">Add Tech Notes</button>
+        <button class="btn btn-danger mb-3 mx-2" @onclick="DeleteTicket">Delete</button>
+    </div>
 </div>
+
+@if (showTechNotesInput)
+{
+    <div class="card">
+        <div class="card-body">
+            <h4>Add Tech Notes</h4>
+            <div class="form-group">
+                <textarea class="form-control" @bind="newTechNotes" rows="4"></textarea>
+            </div>
+            <div class="d-flex justify-content-end mt-2">
+                <button class="btn btn-primary" @onclick="SaveTechNotes">Save Tech Notes</button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter]
     public string TicketId { get; set; }
 
     private Ticket ticket;
+    private bool isLoading = false;
+    private bool showTechNotesInput = false;
+    private string newTechNotes = string.Empty;
 
     protected override void OnInitialized()
     {
         LoadTicketDetails();
+    }
+
+    private void DeleteTicket()
+    {
+        string xmlFilePath = "tickets.xml";
+
+        if (File.Exists(xmlFilePath))
+        {
+            XDocument xmlDoc = XDocument.Load(xmlFilePath);
+            XElement ticketElement = xmlDoc.Root.Elements("Ticket")
+                .FirstOrDefault(x => x.Element("ID").Value == TicketId);
+
+            if (ticketElement != null)
+            {
+                ticketElement.Remove();
+                xmlDoc.Save(xmlFilePath);
+            }
+        }
+        
+        NavigationManager.NavigateTo("/");
     }
 
     private void LoadTicketDetails()
@@ -57,23 +112,38 @@
                         Severity = ticketElement.Element("Severity").Value,
                         DueDate = DateTime.ParseExact(
                             ticketElement.Element("DueDate").Value,
-                            "yyyy-dd-MM", 
+                            "dd-MM-yyyy", 
+                            CultureInfo.InvariantCulture
+                            ),
+                        TimeOfCreation = DateTime.ParseExact(
+                            ticketElement.Element("TimeOfCreation").Value,
+                            "yyyy-MM-dd HH:mm:ss",
                             CultureInfo.InvariantCulture
                             ),
                         Description = ticketElement.Element("Description").Value,
                         ClientEmail = ticketElement.Element("ClientEmail").Value,
                         ClientPhoneNumber = ticketElement.Element("ClientPhoneNumber").Value,
-                        TicketAdministrator = ticketElement.Element("TicketAdministrator").Value
+                        TicketAdministrator = ticketElement.Element("TicketAdministrator").Value,
+                        TechNotes = ticketElement.Element("TechNotes")?
+                            .Elements("Note")
+                            .Select(note => note.Value)
+                            .ToArray()
                     };
                 }
-                catch (Exception ex){
+                catch (Exception ex)
+                {
                     Console.WriteLine($"Error loading ticket details: {ex.Message}");
                 }
             }
         }
     }
-    
-    private void DeleteTicket()
+
+    private void ToggleTechNotesInput()
+    {
+        showTechNotesInput = !showTechNotesInput;
+    }
+
+    private void SaveTechNotes()
     {
         string xmlFilePath = "tickets.xml";
 
@@ -83,13 +153,27 @@
             XElement ticketElement = xmlDoc.Root.Elements("Ticket")
                 .FirstOrDefault(x => x.Element("ID").Value == TicketId);
 
-            if (ticketElement != null){
-                ticketElement.Remove();
-                xmlDoc.Save(xmlFilePath); 
+            if (ticketElement != null)
+            {
+                XElement techNotesElement = ticketElement.Element("TechNotes");
+
+                if (techNotesElement == null)
+                {
+                    techNotesElement = new XElement("TechNotes");
+                    ticketElement.Add(techNotesElement);
+                }
+
+                XElement newNoteElement = new XElement("Note", newTechNotes);
+
+                techNotesElement.Add(newNoteElement);
+                xmlDoc.Save(xmlFilePath);
+
+                List<string> techNotesList = new List<string>(ticket.TechNotes ?? new string[0]);
+                techNotesList.Add(newTechNotes);
+                ticket.TechNotes = techNotesList.ToArray();
             }
         }
-
-        NavigationManager.NavigateTo("/");
+        showTechNotesInput = false;
     }
 
     private string GetSeverityCssClass(string severity)

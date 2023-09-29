@@ -1,5 +1,5 @@
 ﻿@page "/register"
-@using System.Net.Http.Json
+@using TicketingSystem.Data
 @using TicketingSystem.Models
 
 <h3>Register</h3>
@@ -28,28 +28,39 @@
         <InputText id="department" @bind-Value="technician.department" class="form-control" />
     </div>
 
+    <!-- Add a password input field -->
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" @bind-Value="technician.password" type="password" class="form-control" />
+    </div>
+
     <button type="submit" class="btn btn-primary">Register</button>
 </EditForm>
 
+<div>
+    @if (registeredTechnician != null)
+    {
+        <h4>Registered Technician:</h4>
+        <p>ID: @registeredTechnician.ID</p>
+        <p>Email: @registeredTechnician.email</p>
+        <p>First Name: @registeredTechnician.firstname</p>
+        <p>Last Name: @registeredTechnician.lastname</p>
+        <p>Department: @registeredTechnician.department</p>
+    }
+</div>
+
 @code {
     private Technician technician = new Technician();
+    private Technician registeredTechnician;
+
+    [Inject]
+    private DataContext dataContext { get; set; }
 
     private async Task RegisterTechnician()
     {
-        var httpClient = new HttpClient();
-        
-        // Serialize the technician object to JSON and send it in the request body
-        var response = await httpClient.PostAsJsonAsync("http://localhost:5030/api/technician/register", technician);
+        dataContext.Technicians.Add(technician);
+        await dataContext.SaveChangesAsync();
 
-        if (response.IsSuccessStatusCode)
-        {
-            // Registration was successful
-            var message = await response.Content.ReadAsStringAsync();
-        }
-        else
-        {
-            // Registration failed
-            var errorMessage = await response.Content.ReadAsStringAsync();
-        }
+        registeredTechnician = technician;
     }
 }

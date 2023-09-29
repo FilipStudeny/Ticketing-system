@@ -1,0 +1,86 @@
+﻿@page "/login"
+@using TicketingSystem.Data
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
+@using TicketingSystem.Lib.Security
+@using TicketingSystem.Models
+@using UserSession = TicketingSystem.Models.UserSession
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="loginModel.Email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password" @bind-Value="loginModel.Password" type="password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+<div>
+    @if (loginFailed)
+    {
+        <p>Login failed. Please check your email and password.</p>
+    }
+</div>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private bool loginFailed;
+    private UserSession _userSession;
+    private UserSessionManager _userSessionManager;
+
+    [Inject]
+    private DataContext dataContext { get; set; }
+
+    private async Task LoginUser()
+    {
+        var technician = await AuthenticateUser(loginModel.Email, loginModel.Password);
+
+        if (technician != null)
+        {
+            await _userSessionManager.SetUserSession(loginModel.Email, technician.department, technician.ID);
+
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            loginFailed = true;
+        }
+    }
+
+    private async Task<Technician> AuthenticateUser(string email, string password)
+    {
+        var user = await dataContext.Technicians.FirstOrDefaultAsync(u => u.email == email);
+
+        if (user != null && user.password == password)
+        {
+            // Authentication succeeded
+            return user;
+        }
+        else
+        {
+            // Authentication failed
+            return null;
+        }
+    }
+
+    private class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+    }
+}

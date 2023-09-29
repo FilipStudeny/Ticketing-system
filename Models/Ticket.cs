@@ -12,5 +12,7 @@ public class Ticket
     public string ClientPhoneNumber { get; set; }
     public string TicketAdministrator { get; set; }
     public DateTime DueDate { get; set; }
-    
+    public DateTime TimeOfCreation { get; set; }
+
+    public string[] TechNotes { get; set; }
 }
