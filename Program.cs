@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using TicketingSystem.Data;
 using TicketingSystem.Lib.Security;
@@ -16,8 +14,9 @@ builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseSqlite("Data source=ticketingsystem.db");
 });
-builder.Services.AddScoped<ProtectedSessionStorage>();
-builder.Services.AddScoped<AuthenticationStateProvider, AuthenticationService>();
+builder.Services.AddScoped<UserSessionService>();
+builder.Services.AddScoped<UserSessionAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(auth => auth.GetRequiredService<UserSessionAuthenticationStateProvider>());
 
 var app = builder.Build();
 
