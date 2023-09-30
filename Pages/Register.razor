@@ -2,6 +2,11 @@
 @using TicketingSystem.Data
 @using TicketingSystem.Models
 
+
+@attribute [Authorize(Roles ="admin")]
+
+<div>This page is for admin only.</div>
+
 <h3>Register</h3>
 
 <EditForm Model="@technician" OnValidSubmit="RegisterTechnician">

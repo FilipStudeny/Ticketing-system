@@ -6,6 +6,12 @@
 
 <h2>Create new ticket</h2>
 
+<AuthorizeView Roles="admin">
+    <Authorized>
+        <div>Content for admin users.</div>
+    </Authorized>
+</AuthorizeView>
+
 <EditForm Model="@ticket" OnValidSubmit="SaveTicket">
     <DataAnnotationsValidator />
     <div class="mb-3">

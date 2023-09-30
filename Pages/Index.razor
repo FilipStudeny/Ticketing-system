@@ -4,11 +4,11 @@
 @using System.IO
 @using System.Globalization
 @using TicketingSystem.Lib.Security
-@using AuthenticationStateProvider = TicketingSystem.Lib.Security.UserSessionAuthenticationStateProvider
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider UserSessionAuthenticationStateProvider
 
 <h2>Ticket List</h2>
+
+
 
 <div class="btn-group flex-row justify-content-evenly">
     <button @onclick="(() => SortTickets(TicketField.TicketID))" class="btn btn-primary filter-button">Ticket ID</button>

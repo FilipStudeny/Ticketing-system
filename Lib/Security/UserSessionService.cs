@@ -22,7 +22,11 @@ public class UserSessionService
             {
                 Email = "admin@gmail.com",
                 Password = "123",
-                Firstname = "Admin"
+                Firstname = "Admin",
+                Roles = new()
+                {
+                    "admin"
+                }
             }
         };
 
