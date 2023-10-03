@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketingSystem.Data;
 
@@ -10,9 +11,11 @@ using TicketingSystem.Data;
 namespace TicketingSystem.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20231003130151_IDretype")]
+    partial class IDretype
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.11");
@@ -57,7 +60,7 @@ namespace TicketingSystem.Migrations
                             Firstname = "Admin",
                             Lastname = "User",
                             Password = "123456789",
-                            RegisterDate = new DateTime(2023, 10, 3, 15, 16, 53, 926, DateTimeKind.Local).AddTicks(9579),
+                            RegisterDate = new DateTime(2023, 10, 3, 15, 1, 51, 697, DateTimeKind.Local).AddTicks(2298),
                             UserRole = "Administrator"
                         });
                 });

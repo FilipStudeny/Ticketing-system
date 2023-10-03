@@ -5,28 +5,29 @@
 @using System.Globalization
 @using System.Collections.Generic
 @inject NavigationManager NavigationManager
+@attribute [AllowAnonymous]
 
 <h2>Ticket Details</h2>
 
 <div class="card">
     <div class="card-body">
-        <h3>@ticket.Title</h3>
-        <p><strong>Ticket ID:</strong> @ticket.TicketId</p>
-        <p><strong>Severity:</strong> <span class="@GetSeverityCssClass(ticket.Severity)">@ticket.Severity</span></p>
-        <p><strong>Due Date:</strong> @ticket.DueDate.ToShortDateString()</p>
-        <p><strong>Time ticket was created:</strong> @ticket.TimeOfCreation</p>
+        <h3>@_ticket.Title</h3>
+        <p><strong>Ticket ID:</strong> @_ticket.TicketId</p>
+        <p><strong>Severity:</strong> <span class="@GetSeverityCssClass(_ticket.Severity)">@_ticket.Severity</span></p>
+        <p><strong>Due Date:</strong> @_ticket.DueDate.ToShortDateString()</p>
+        <p><strong>Time ticket was created:</strong> @_ticket.TimeOfCreation</p>
 
         <p><strong>Description:</strong></p>
-        <p>@ticket.Description</p>
-        <p><strong>Client Email:</strong> @ticket.ClientEmail</p>
-        <p><strong>Client Phone Number:</strong> @ticket.ClientPhoneNumber</p>
-        <p><strong>Ticket Administrator:</strong> @ticket.TicketAdministrator</p>
+        <p>@_ticket.Description</p>
+        <p><strong>Client Email:</strong> @_ticket.ClientEmail</p>
+        <p><strong>Client Phone Number:</strong> @_ticket.ClientPhoneNumber</p>
+        <p><strong>Ticket Administrator:</strong> @_ticket.TicketAdministrator</p>
 
-        @if (ticket.TechNotes != null && ticket.TechNotes.Length > 0)
+        @if (_ticket.TechNotes != null && _ticket.TechNotes.Length > 0)
         {
             <p><strong>Tech Notes:</strong></p>
             <ul>
-                @foreach (var note in ticket.TechNotes)
+                @foreach (var note in _ticket.TechNotes)
                 {
                     <li>@note.Trim()</li>
                 }
@@ -37,8 +38,18 @@
 
 <div class="d-flex justify-content-end">
     <div class="mb-3 mt-2 d-flex justify-content-evenly">
-        <button class="btn btn-primary mb-3 mx-2" @onclick="ToggleTechNotesInput">Add Tech Notes</button>
-        <button class="btn btn-danger mb-3 mx-2" @onclick="DeleteTicket">Delete</button>
+        <AuthorizeView Roles="Technician">
+            <Authorized>
+                <button class="btn btn-primary mb-3 mx-2" @onclick="ToggleTechNotesInput">Add Tech Notes</button>
+            </Authorized>
+        </AuthorizeView>
+        
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <button class="btn btn-danger mb-3 mx-2" @onclick="DeleteTicket">Delete</button>
+            </Authorized>
+        </AuthorizeView>
+        
     </div>
 </div>
 
@@ -61,7 +72,7 @@
     [Parameter]
     public string TicketId { get; set; }
 
-    private Ticket ticket;
+    private Ticket _ticket;
     private bool isLoading = false;
     private bool showTechNotesInput = false;
     private string newTechNotes = string.Empty;
@@ -105,7 +116,7 @@
             {
                 try
                 {
-                    ticket = new Ticket
+                    _ticket = new Ticket
                     {
                         TicketId = ticketElement.Element("ID").Value,
                         Title = ticketElement.Element("Title").Value,
@@ -168,9 +179,9 @@
                 techNotesElement.Add(newNoteElement);
                 xmlDoc.Save(xmlFilePath);
 
-                List<string> techNotesList = new List<string>(ticket.TechNotes ?? new string[0]);
+                List<string> techNotesList = new List<string>(_ticket.TechNotes ?? new string[0]);
                 techNotesList.Add(newTechNotes);
-                ticket.TechNotes = techNotesList.ToArray();
+                _ticket.TechNotes = techNotesList.ToArray();
             }
         }
         showTechNotesInput = false;

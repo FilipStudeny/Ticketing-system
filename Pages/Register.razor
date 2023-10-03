@@ -1,71 +1,105 @@
 ﻿@page "/register"
-@using TicketingSystem.Data
 @using TicketingSystem.Models
-
-
-@attribute [Authorize(Roles ="admin")]
-
-<div>This page is for admin only.</div>
+@using TicketingSystem.Data
+@using System.Text
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@attribute [AllowAnonymous]
 
 <h3>Register</h3>
 
-<EditForm Model="@technician" OnValidSubmit="RegisterTechnician">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
+<EditForm Model="@newUser" OnValidSubmit="RegisterTechnician">
     <div class="form-group">
         <label for="email">Email</label>
-        <InputText id="email" @bind-Value="technician.email" class="form-control" />
+        <InputText id="email" @bind-Value="newUser.Email" class="form-control" />
+        <ValidationMessage For="@(() => newUser.Email)" />
     </div>
 
-    <div class="form-group">
-        <label for="firstname">First Name</label>
-        <InputText id="firstname" @bind-Value="technician.firstname" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label for="lastname">Last Name</label>
-        <InputText id="lastname" @bind-Value="technician.lastname" class="form-control" />
-    </div>
-
-    <div class="form-group">
-        <label for="department">Department</label>
-        <InputText id="department" @bind-Value="technician.department" class="form-control" />
-    </div>
-
-    <!-- Add a password input field -->
     <div class="form-group">
         <label for="password">Password</label>
-        <InputText id="password" @bind-Value="technician.password" type="password" class="form-control" />
+        <InputText id="password" @bind-Value="newUser.Password" type="password" class="form-control" />
+        <ValidationMessage For="@(() => newUser.Password)" />
     </div>
 
-    <button type="submit" class="btn btn-primary">Register</button>
+    <div class="mb-3">
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="firstname">First Name</label>
+                <InputText id="firstname" @bind-Value="newUser.Firstname" class="form-control" />
+                <ValidationMessage For="@(() => newUser.Firstname)" />
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="lastname">Last Name</label>
+                <InputText id="lastname" @bind-Value="newUser.Lastname" class="form-control" />
+                <ValidationMessage For="@(() => newUser.Lastname)" />
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@(!IsFormValid())">Register</button>
 </EditForm>
 
-<div>
-    @if (registeredTechnician != null)
-    {
-        <h4>Registered Technician:</h4>
-        <p>ID: @registeredTechnician.ID</p>
-        <p>Email: @registeredTechnician.email</p>
-        <p>First Name: @registeredTechnician.firstname</p>
-        <p>Last Name: @registeredTechnician.lastname</p>
-        <p>Department: @registeredTechnician.department</p>
-    }
-</div>
-
 @code {
-    private Technician technician = new Technician();
-    private Technician registeredTechnician;
+    private User newUser = new User();
+    private static readonly Random random = new Random();
 
     [Inject]
     private DataContext dataContext { get; set; }
 
+    private bool IsFormValid()
+    {
+        return !string.IsNullOrWhiteSpace(newUser.Email) &&
+               !string.IsNullOrWhiteSpace(newUser.Password) &&
+               !string.IsNullOrWhiteSpace(newUser.Firstname) &&
+               !string.IsNullOrWhiteSpace(newUser.Lastname);
+    }
+
     private async Task RegisterTechnician()
     {
-        dataContext.Technicians.Add(technician);
+        newUser.UserRole = "Technician";
+    
+        // Generate a unique ID
+        newUser.ID = await GenerateUniqueUserIdAsync(10);
+
+        dataContext.Users.Add(newUser); // Assuming "Users" is the DbSet for users
         await dataContext.SaveChangesAsync();
 
-        registeredTechnician = technician;
+        NavigationManager.NavigateTo("/login");
+    }
+    
+    private async Task<bool> IsUserIdUniqueAsync(string userId)
+    {
+        bool isUnique = !await dataContext.Users.AnyAsync(u => u.ID == userId);
+        return isUnique;
+    }
+    
+    private async Task<string> GenerateUniqueUserIdAsync(int length)
+    {
+        const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder stringBuilder = new StringBuilder(length);
+        Random random = new Random();
+
+        while (true)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                int index = random.Next(characters.Length);
+                stringBuilder.Append(characters[index]);
+            }
+
+            string generatedId = stringBuilder.ToString();
+
+            bool isIdUnique = await IsUserIdUniqueAsync(generatedId);
+
+            if (isIdUnique)
+            {
+                return generatedId;
+            }
+            else
+            {
+                stringBuilder.Clear();
+            }
+        }
     }
 }

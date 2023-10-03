@@ -1,12 +1,48 @@
 ﻿@page "/login"
 @using TicketingSystem.Lib.Security
 @inject UserSessionAuthenticationStateProvider UserSessionAuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@attribute [AllowAnonymous]
+
 <h3>Login</h3>
-<button type="button" class="btn btn-success" @onclick="LoginAsync">Login</button>
+<EditForm Model="loginModel" OnValidSubmit="LoginAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <InputText id="email" @bind-Value="loginModel.Email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <InputText id="password" @bind-Value="loginModel.Password" type="password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3" disabled="@(!IsFormValid())">Login</button>
+</EditForm>
 
 @code {
-    public async Task LoginAsync()
+    public class LoginModel
     {
-        await UserSessionAuthenticationStateProvider.Login("admin@gmail.com", "123");
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+    
+    private LoginModel loginModel = new LoginModel();
+    
+    private bool IsFormValid()
+    {
+        return !string.IsNullOrWhiteSpace(loginModel.Email) && !string.IsNullOrWhiteSpace(loginModel.Password);
+    }
+    
+    private async Task LoginAsync()
+    {
+        if (IsFormValid())
+        {
+            await UserSessionAuthenticationStateProvider.Login(loginModel.Email, loginModel.Password);
+            NavigationManager.NavigateTo("/");
+
+        }
     }
 }

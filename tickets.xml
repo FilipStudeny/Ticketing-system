@@ -13,6 +13,7 @@
     <TechNotes>
       <Note>justo in blandit ultrices enim lorem ipsum dolor </Note>
       <Note>hendrerit at vulputate vitae nisl aenean lectus iscing elit proin interdum mauris non ligula pellentesque</Note>
+      <Note>vitae nisl aenean lectus iscing</Note>
     </TechNotes>
   </Ticket>
   <Ticket>
@@ -270,5 +271,27 @@
     <TechNotes>
       <Note>New note</Note>
     </TechNotes>
+  </Ticket>
+  <Ticket>
+    <ID>2lMn83rzWsbNutYhiXZRVFjw</ID>
+    <Title>New ticket</Title>
+    <Description>asdads</Description>
+    <Severity>High</Severity>
+    <ClientEmail>mitas@gmail.com</ClientEmail>
+    <ClientPhoneNumber>123456789</ClientPhoneNumber>
+    <TicketAdministrator />
+    <DueDate>12-12-2024</DueDate>
+    <TimeOfCreation>2023-10-03 15:37:54</TimeOfCreation>
+  </Ticket>
+  <Ticket>
+    <ID>dbDypZqh5MbucrYWX3Y3azet</ID>
+    <Title>asdsa</Title>
+    <Description>asdas</Description>
+    <Severity>High</Severity>
+    <ClientEmail>asda@gmial.com</ClientEmail>
+    <ClientPhoneNumber>12345679</ClientPhoneNumber>
+    <TicketAdministrator>80XO2v3AmS</TicketAdministrator>
+    <DueDate>11-11-2023</DueDate>
+    <TimeOfCreation>2023-10-03 15:39:53</TimeOfCreation>
   </Ticket>
 </Tickets>

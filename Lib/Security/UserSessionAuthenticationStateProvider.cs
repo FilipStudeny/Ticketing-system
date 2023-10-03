@@ -32,7 +32,7 @@ public class UserSessionAuthenticationStateProvider : AuthenticationStateProvide
     public async Task Loggout()
     {
         await _userSessionService.ClearBrowserSessionData();
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(new())));
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(new ClaimsPrincipal())));
     }
 
     // Handle revisit/refresh of a page
@@ -41,15 +41,16 @@ public class UserSessionAuthenticationStateProvider : AuthenticationStateProvide
         var claimsPrincipal = new ClaimsPrincipal();
         var user = await _userSessionService.FetchUserSessionFromStorage();
 
-        if (user != null)
+        if (user is not null)
         {
             var userInDatabase = _userSessionService.FindUserInDatabase(user.Email, user.Password);
 
-            if (user != null)
+            if (userInDatabase  != null)
             {
                 claimsPrincipal = userInDatabase.ToClaimsPrincipal();
                 currentUserSession = userInDatabase;
             }
+
         }
 
         return new(claimsPrincipal);
@@ -58,10 +59,7 @@ public class UserSessionAuthenticationStateProvider : AuthenticationStateProvide
     private async void OnAuthenticationStateChangedAsync(Task<AuthenticationState> task)
     {
         var authenticationState = await task;
-        if (authenticationState is not null)
-        {
-            currentUserSession = UserSession.FromClaimsPrincipal(authenticationState.User);
-        }
+        currentUserSession = UserSession.FromClaimsPrincipal(authenticationState.User);
     }
 
     public void Dispose() => AuthenticationStateChanged -= OnAuthenticationStateChangedAsync;

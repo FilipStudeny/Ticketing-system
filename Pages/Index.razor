@@ -3,13 +3,11 @@
 @using TicketingSystem.Models
 @using System.IO
 @using System.Globalization
-@using TicketingSystem.Lib.Security
 @inject NavigationManager NavigationManager
 
+@attribute [AllowAnonymous]
+
 <h2>Ticket List</h2>
-
-
-
 <div class="btn-group flex-row justify-content-evenly">
     <button @onclick="(() => SortTickets(TicketField.TicketID))" class="btn btn-primary filter-button">Ticket ID</button>
     <button @onclick="(() => SortTickets(TicketField.Title))" class="btn btn-primary filter-button">Title</button>

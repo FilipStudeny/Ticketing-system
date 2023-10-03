@@ -2,7 +2,11 @@
 @using TicketingSystem.Models
 @using System.Xml.Linq
 @using System.Text
+@using TicketingSystem.Lib.Security
 @inject NavigationManager NavigationManager
+@inject UserSessionAuthenticationStateProvider UserSessionAuthenticationStateProvider
+
+@attribute [Authorize]
 
 <h2>Create new ticket</h2>
 
@@ -12,19 +16,19 @@
     </Authorized>
 </AuthorizeView>
 
-<EditForm Model="@ticket" OnValidSubmit="SaveTicket">
+<EditForm Model="@_ticket" OnValidSubmit="SaveTicket">
     <DataAnnotationsValidator />
     <div class="mb-3">
         <div class="row">
             <div class="form-group col-md-10">
                 <label for="title">Title:</label>
-                <InputText id="title" class="form-control" @bind-Value="ticket.Title" />
-                <ValidationMessage For="@(() => ticket.Title)" class="text-danger" />
+                <InputText id="title" class="form-control" @bind-Value="_ticket.Title" />
+                <ValidationMessage For="@(() => _ticket.Title)" class="text-danger" />
             </div>
             <div class="form-group col-md-2">
                 <label for="dueDate">Due Date:</label>
-                <InputDate id="dueDate" class="form-control" @bind-Value="ticket.DueDate" min="@DateTime.Now.Date.ToShortDateString()" />
-                <ValidationMessage For="@(() => ticket.DueDate)" class="text-danger" />
+                <InputDate id="dueDate" class="form-control" @bind-Value="_ticket.DueDate" min="@DateTime.Now.Date.ToShortDateString()" />
+                <ValidationMessage For="@(() => _ticket.DueDate)" class="text-danger" />
             </div>
         </div>
     </div>
@@ -32,8 +36,8 @@
     <div class="mb-3">
         <div class="form-group">
             <label for="description">Description:</label>
-            <InputTextArea id="description" class="form-control" @bind-Value="ticket.Description" />
-            <ValidationMessage For="@(() => ticket.Description)" class="text-danger" />
+            <InputTextArea id="description" class="form-control" @bind-Value="_ticket.Description" />
+            <ValidationMessage For="@(() => _ticket.Description)" class="text-danger" />
         </div>
     </div>
     
@@ -41,14 +45,14 @@
         <div class="row">
             <div class="form-group col-md-6">
                 <label for="clientEmail">Client Email:</label>
-                <InputText type="email" id="clientEmail" class="form-control" @bind-Value="ticket.ClientEmail" />
-                <ValidationMessage For="@(() => ticket.ClientEmail)" class="text-danger" />
+                <InputText type="email" id="clientEmail" class="form-control" @bind-Value="_ticket.ClientEmail" />
+                <ValidationMessage For="@(() => _ticket.ClientEmail)" class="text-danger" />
             </div>
             
             <div class="form-group col-md-6">
                 <label for="clientPhoneNumber">Client Phone Number:</label>
-                <InputText type="number" id="clientPhoneNumber" class="form-control" @bind-Value="ticket.ClientPhoneNumber" />
-                <ValidationMessage For="@(() => ticket.ClientPhoneNumber)" class="text-danger" />
+                <InputText type="number" id="clientPhoneNumber" class="form-control" @bind-Value="_ticket.ClientPhoneNumber" />
+                <ValidationMessage For="@(() => _ticket.ClientPhoneNumber)" class="text-danger" />
             </div>
         </div>
     </div>
@@ -57,17 +61,18 @@
         <div class="row">
             <div class="form-group col-md-6">
                 <label for="severity">Severity:</label>
-                <InputSelect id="severity" class="form-control" @bind-Value="ticket.Severity">
+                <InputSelect id="severity" class="form-control" @bind-Value="_ticket.Severity">
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
                 </InputSelect>
-                <ValidationMessage For="@(() => ticket.Severity)" class="text-danger" />
+                <ValidationMessage For="@(() => _ticket.Severity)" class="text-danger" />
             </div>
             <div class="form-group col-md-6">
-                <label for="ticketAdministrator">Ticket Administrator:</label>
-                <InputText id="ticketAdministrator" class="form-control" @bind-Value="ticket.TicketAdministrator" />
-                <ValidationMessage For="@(() => ticket.TicketAdministrator)" class="text-danger" />
+                <label for="ticketAdministrator">Ticket Administrator ID:</label>
+                <span id="ticketAdministrator" class="form-control">
+                    @UserSessionAuthenticationStateProvider.currentUserSession.ID
+                </span>
             </div>
         </div>
     </div>
@@ -89,22 +94,22 @@
 
 
 @code {
-    private Ticket ticket = new Ticket();
+    private Ticket _ticket = new Ticket();
     private bool showWarning = false;
     private static readonly Random random = new Random();
     
     private void SaveTicket()
     {
-        if (string.IsNullOrEmpty(ticket.Title) || string.IsNullOrEmpty(ticket.Description) ||
-            string.IsNullOrEmpty(ticket.ClientEmail) || string.IsNullOrEmpty(ticket.ClientPhoneNumber) ||
-            string.IsNullOrEmpty(ticket.Severity) || string.IsNullOrEmpty(ticket.TicketAdministrator))
+        if (string.IsNullOrEmpty(_ticket.Title) || string.IsNullOrEmpty(_ticket.Description) ||
+            string.IsNullOrEmpty(_ticket.ClientEmail) || string.IsNullOrEmpty(_ticket.ClientPhoneNumber) ||
+            string.IsNullOrEmpty(_ticket.Severity))
         {
             showWarning = true;
             return;
         }
 
         string randomId = GenerateRandomId(24); 
-        ticket.TicketId = randomId;
+        _ticket.TicketId = randomId;
         
         string xmlFilePath = "tickets.xml";
         XDocument xmlDoc;
@@ -120,20 +125,20 @@
         }
 
         XElement ticketXml = new XElement("Ticket",
-            new XElement("ID", ticket.TicketId),
-            new XElement("Title", ticket.Title),
-            new XElement("Description", ticket.Description),
-            new XElement("Severity", ticket.Severity),
-            new XElement("ClientEmail", ticket.ClientEmail),
-            new XElement("ClientPhoneNumber", ticket.ClientPhoneNumber),
-            new XElement("TicketAdministrator", ticket.TicketAdministrator),
-            new XElement("DueDate", ticket.DueDate.ToString("dd-MM-yyyy")),
+            new XElement("ID", _ticket.TicketId),
+            new XElement("Title", _ticket.Title),
+            new XElement("Description", _ticket.Description),
+            new XElement("Severity", _ticket.Severity),
+            new XElement("ClientEmail", _ticket.ClientEmail),
+            new XElement("ClientPhoneNumber", _ticket.ClientPhoneNumber),
+            new XElement("TicketAdministrator", @UserSessionAuthenticationStateProvider.currentUserSession.ID),
+            new XElement("DueDate", _ticket.DueDate.ToString("dd-MM-yyyy")),
             new XElement("TimeOfCreation", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
             );
         xmlDoc.Root.Add(ticketXml);
 
         xmlDoc.Save(xmlFilePath);
-        ticket = new Ticket();
+        _ticket = new Ticket();
         NavigationManager.NavigateTo("/");
     }
 

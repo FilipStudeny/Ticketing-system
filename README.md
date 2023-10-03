@@ -24,4 +24,8 @@ IT support tickets are saved into **tickets.xml** (will be improved)
 ![Alt ](./Images/tck_1.PNG)
 ![Alt ](./Images/tck_2.PNG)
 ![Alt ](./Images/tck_3.PNG)
+![Alt ](./Images/tck_4.PNG)
+![Alt ](./Images/tck_5.PNG)
+![Alt ](./Images/tck_6.PNG)
+![Alt ](./Images/tck_7.PNG)
 
